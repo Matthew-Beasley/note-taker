@@ -1,12 +1,13 @@
-const userContainer = document.querySelector('#user-info');
-const notesContainer = document.querySelector('#notes');
+const userContainer = document.querySelector('#user-container');
+const notesContainer = document.querySelector('#notes-container');
+const inputContainer = document.querySelector('#input-container');
 const createButton = document.querySelector('#create');
 const inputBox = document.querySelector('#words');
 
-console.log(createButton)
 let user, notes;
 
 const API = 'https://acme-users-api-rev.herokuapp.com/api';
+
 
 const fetchUser = async () => {
     const storage = window.localStorage;
@@ -25,17 +26,6 @@ const fetchUser = async () => {
     return user;
 };
 
-const renderNotes = async () => {
-    const storage = window.localStorage;
-    notes = await axios.get(`${API}/users/${user.id}/notes`);
-
-    let notesHtml = `
-    <ul>`
-    notes.data.forEach(item => { notesHtml += `<li>${item.text}</li>` })
-
-    notesHtml += '</ul>'
-    notesContainer.innerHTML = notesHtml;
-}
 
 const renderUser = () => {
     userContainer.innerHTML = `
@@ -44,19 +34,52 @@ const renderUser = () => {
     <div>${user.bio}</div>`;
 }
 
+
+const renderNotes = async () => {
+    let notesHtml = `
+    <h4>Notes ${notes.length}</h4>
+    <ul>`
+    notes.forEach(item => { notesHtml += ` <button class="delete-button" data-id="${item.id}">X</button><li>${item.text}</li>` })
+    notesHtml += '</ul>'
+    notesContainer.innerHTML = notesHtml;
+}
+
+
+const deleteNote = async event => {
+    event.preventDefault() //? do I wwant this to rerender
+    const id = event.target.getAttribute('data-id');
+    if (id) {
+        console.log(`${API}/users/${user.id}/notes/${id}`)
+        await axios.delete(`${API}/users/${user.id}/notes/${id}`);
+    }
+    notes = notes.filter(note => note.id !== id);
+    renderNotes();
+}
+
+
+const postNote = async (event) => {
+    event.preventDefault();
+
+    const noteVal = { text: document.querySelector('#display').innerHTML = inputBox.value, id: user.id};
+    notes.push(noteVal)
+    const response = await axios.post(`${API}/users/${user.id}/notes`, noteVal);
+    const created = response.data;
+    renderNotes();
+}
+
+
 const startApp = async () => {
     user = await fetchUser();
     renderUser();
+    const response = await axios.get(`${API}/users/${user.id}/notes`);
+    notes = response.data;
+    notes.forEach(note => console.log(note.id))
     renderNotes();
 };
 
-const displayText = (event) => {
-    event.preventDefault();
-    console.log(event)
-    document.querySelector('#display').innerHTML = inputBox.value;
-}
 
 startApp();
 
-createButton.addEventListener('click', displayText)
+createButton.addEventListener('click', postNote)
+notesContainer.addEventListener('click', deleteNote)
 
