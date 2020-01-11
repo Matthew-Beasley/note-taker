@@ -1,4 +1,6 @@
 const userContainer = document.querySelector('#user-info');
+const notesContainer = document.querySelector('#notes');
+console.log(notesContainer)
 let user, notes;
 
 const API = 'https://acme-users-api-rev.herokuapp.com/api';
@@ -20,11 +22,15 @@ const fetchUser = async () => {
     return user;
 };
 
+const renderNotes = async () => {
+    notes = await axios.get(`${API}/users/${user.id}/notes`);
+    console.log(notes);
+}
+
 const renderUser = () => {
     console.log(user)
     userContainer.innerHTML = `
-    <h3>${user.fullName}</h3>
-    <div>${user.email}</div>
+    <h4>${user.fullName}</h>
     <img src="${user.avatar}">
     <div>${user.bio}</div>`;
 }
@@ -33,6 +39,7 @@ const startApp = async () => {
     user = await fetchUser();
     console.log(user);
     renderUser();
+    renderNotes();
 };
 
 startApp();
